@@ -7,6 +7,7 @@ plugins {
     application
     id("io.ktor.plugin") version "3.0.2"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
 }
 
 group = "me.sautner"
@@ -24,7 +25,10 @@ repositories {
 }
 
 dependencies {
+    implementation(kotlin("stdlib-jdk8"))
     implementation(project(":autorouting"))
+    implementation(project(":ksp"))
+    ksp(project(":ksp"))
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-resources-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")

@@ -1,3 +1,6 @@
-package com.sautner.com.sautner.ksp.annotations
+package com.sautner.ksp.annotations
 
-annotation class AutoRouting()
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class AutoRouting
