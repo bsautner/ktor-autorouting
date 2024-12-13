@@ -5,18 +5,20 @@ import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
 import com.sautner.autorouter.AutoGet
 import com.sautner.autorouter.AutoPost
+import com.sautner.autorouter.AutoWeb
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.writeTo
 import io.ktor.server.application.*
-import io.ktor.server.routing.*
-import jdk.internal.net.http.frame.Http2Frame.asString
-import java.io.OutputStream
 import java.util.*
 import kotlin.reflect.KClass
 
-fun OutputStream.appendText(str: String) {
-    this.write(str.toByteArray())
-}
+/**
+ * TODO - add sorting and organize the generated routes.
+ * add kdocs
+ *
+ *
+ *
+ */
 
 lateinit var logger: KSPLogger
 
@@ -32,18 +34,6 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
             createRouter(sequence)
         }
 
-
-
-//        log("processing ${sequence.toLsi .size} classes......")
-//        sequence.forEach {
-//            log("Code Generator Receiving ${it.javaClass.simpleName} ${it.validate()}")
-//        }
-//        if (sequence.isNotEmpty()) {
-//             createRouter(sequence)
-//        }
-
-//
-//            .forEach { it.accept(BuilderVisitor(), Unit) }
         return sequence.toList()
     }
 
@@ -82,6 +72,11 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
         file.addImport("io.ktor.server.routing", "routing")
             .addImport("io.ktor.server.resources", "get", "post", "delete", "put")
             .addImport("io.ktor.util.reflect", "TypeInfo")
+            .addImport("io.ktor.server.html", "respondHtml")
+            .addImport("kotlinx.html", "html", "body", "div")
+            .addImport("com.sautner.autorouter","getPostBodyClass", "getPostResponseBodyClass")
+            .addImport("io.ktor.server.request", "receive")
+
 
 
 
@@ -128,15 +123,58 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
                     //getBlock.add("call.respond(it.render.invoke())")
                     val responseClass = getAutoRoutingKClassName(ksc)
                     responseClass?.let {
-                        getBlock.addStatement("val r = it.render.invoke()")
-                        getBlock.beginControlFlow("r?.let")
-                        getBlock.addStatement(" call.respond(r as ${responseClass.second}, typeInfo = TypeInfo(${responseClass.second}::class))")
-                        getBlock.endControlFlow()
+                        getBlock.addStatement(" call.respond(it.render.invoke() as ${responseClass.second}, typeInfo = TypeInfo(${responseClass.second}::class))")
                     }
                     getBlock.endControlFlow()
                 }
+                if (ksc.implementsInterface(AutoWeb::class)) {
+
+                    /**
+                     *   routing {
+                     *         get<Website.HomePage> {
+                     *             call.respondHtml {
+                     *
+                     *                 body {
+                     *                     it.render.invoke(this)
+                     *
+                     *                 }
+                     *             }
+                     *
+                     *         }
+                     *     }
+                     */
+
+                    getBlock.beginControlFlow("get<${ksc.simpleName.asString()}>")
+
+                    getBlock.beginControlFlow("call.respondHtml")
+                    getBlock.beginControlFlow("body")
+                    getBlock.addStatement("it.render.invoke(this)")
+                    getBlock.endControlFlow().endControlFlow()
+
+                  // getBlock.addStatement(" call.respond(it.render.invoke() as ${responseClass.second}, typeInfo = TypeInfo(${responseClass.second}::class))")
+
+                    getBlock.endControlFlow()
+                }
+
+
                 if (ksc.implementsInterface(AutoPost::class)) {
+                    /**
+                     *   routing {
+                     *         post<Sensor> {
+                     *             val body = call.receive(it.getPostBodyClass())
+                     *             val response = it.process(body as TestPostBody)
+                     *             call.respond(response, TypeInfo(it.getPostResponseBodyClass()))
+                     *         }
+                     *     }
+                     */
+                    val responseClass = getAutoRoutingKClassName(ksc)?.second
+                    if (responseClass?.isEmpty() == true) {
+                       logger.error("AutoRouter processed a POST but the post body KClass is missing from the Annotation.")
+                    }
                     getBlock.beginControlFlow("post<${ksc.simpleName.asString()}>")
+                    getBlock.addStatement("val body = call.receive(it.getPostBodyClass())")
+                        .addStatement("val response = it.process(body as ${responseClass})")
+                        .addStatement("call.respond(response, TypeInfo(it.getPostResponseBodyClass()))")
                     getBlock.endControlFlow()
                 }
                 builder.add(getBlock.build())

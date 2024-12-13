@@ -1,20 +1,15 @@
 package me.sautner.ktor
 
-import com.sautner.autorouter.AutoJsonResponse
-import com.sautner.autorouter.Registry
-import io.ktor.http.*
-import io.ktor.resources.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.resources.*
+import com.sautner.ktor.autoRoute
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.resources.Resources
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.reflect.*
+import io.ktor.server.routing.getAllRoutes
+import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
+
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -22,32 +17,29 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
 
-    val actorSerializersModule = SerializersModule {
-        polymorphic(AutoJsonResponse::class) {
-            subclass(Test::class, Test.serializer())
 
-        }
-
-    }
     install(ContentNegotiation) {
         json(
             Json {
                 prettyPrint = true
                 encodeDefaults = true
                 isLenient = true
-                serializersModule = actorSerializersModule
+
             }
         )
     }
 
     install(Resources)
+    autoRoute()
 
+//    routing {
+//        post<Sensor> {
+//            val body = call.receive(it.getPostBodyClass())
+//            val response = it.process(body as TestPostBody)
+//            call.respond(response, TypeInfo(it.getPostResponseBodyClass()))
+//        }
+//    }
 
-    routing {
-        get<Actor.Actor1> {
-             call.respond(it.render.invoke() as Test, typeInfo = TypeInfo(Test::class))
-        }
-    }
     printRoutes()
 
 }
