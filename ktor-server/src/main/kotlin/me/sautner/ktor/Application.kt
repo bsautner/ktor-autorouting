@@ -1,13 +1,12 @@
 package me.sautner.ktor
 
+import com.sautner.autorouter.printRoutes
 import com.sautner.ktor.autoRoute
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.resources.Resources
-import io.ktor.server.routing.getAllRoutes
-import io.ktor.server.routing.routing
 import kotlinx.serialization.json.Json
 
 
@@ -43,11 +42,4 @@ fun Application.module() {
     printRoutes()
 
 }
-private fun Application.printRoutes() {
 
-    this.routing {}.run {
-        getAllRoutes().forEach {
-            println("CG: Route: $it")
-        }
-    }
-}

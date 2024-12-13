@@ -4,9 +4,7 @@ import kotlin.reflect.KClass
 
 
 interface AutoGet<T> {
-
     var render: () -> AutoResponse
-
 }
 
 interface AutoWeb<T> {
@@ -15,7 +13,6 @@ interface AutoWeb<T> {
 
 interface AutoPost<T, R> {
     var process: (T) -> R
-
 }
 
 inline fun <reified T, reified R> AutoPost<T, R>.getPostBodyClass() : KClass<*> {
