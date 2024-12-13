@@ -6,6 +6,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 
 class AutoRoutingProcessorProvider: SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return AutoRoutingProcessor(environment.codeGenerator, environment.logger)
+        return AutoRoutingProcessor(environment)
     }
 }

@@ -8,6 +8,5 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 rootProject.name = "ktor-autorouting"
-include("ksp")
 include("ktor-server")
-include("autorouting")
+include("auto-router")
