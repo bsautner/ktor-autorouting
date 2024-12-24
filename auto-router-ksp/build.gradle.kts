@@ -8,11 +8,13 @@ version = "1.0-SNAPSHOT"
 
 plugins {
     kotlin("jvm")
+    kotlin("kapt")
+    id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     `maven-publish`
     `java-library`
     signing
- }
+}
 
 repositories {
     mavenCentral()
@@ -31,9 +33,11 @@ val sourcesJar by tasks.registering(Jar::class) {
     from(sourceSets["main"].allSource)
 }
 
-
-
 dependencies {
+    implementation(project(":auto-router"))
+    implementation("com.google.devtools.ksp:symbol-processing-api:$ksp_version")
+    implementation("com.squareup:kotlinpoet:$poet_version")
+    implementation("com.squareup:kotlinpoet-ksp:$poet_version")
     implementation("io.ktor:ktor-server-html-builder:$ktor_version")
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-resources:$ktor_version")
@@ -53,9 +57,9 @@ publishing {
     }
 
     publications {
-        create<MavenPublication>("auto-router") {
+        create<MavenPublication>("auto-router-ksp") {
             from(components["java"])
-            artifactId = "auto-router"
+            artifactId = "auto-router-ksp"
             groupId = "io.github.bsautner"
             version = "0.0.1"
 
@@ -64,8 +68,8 @@ publishing {
             artifact(javadocJar)
 
             pom {
-                name.set("Ktor Auto Router")
-                description.set("Kotlin Ktor Auto Router")
+                name.set("Ktor Auto Router KSP")
+                description.set("Kotlin Ktor Auto Router Code Generator")
                 url.set("https://github.com/bsautner/ktor-autorouting")
 
                 licenses {
@@ -95,6 +99,5 @@ signing {
     val signingKey = System.getenv("SIGNING_KEY")?.replace("\\n", "\n")
     val signingPassword = System.getenv("SIGNING_PASSWORD")
     useInMemoryPgpKeys(signingKey, signingPassword)
-    sign(publishing.publications["auto-router"])
+    sign(publishing.publications["auto-router-ksp"])
 }
-

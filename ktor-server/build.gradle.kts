@@ -32,15 +32,15 @@ repositories {
     mavenCentral()
 }
 
-ksp {
-    arg("RouterClassName", "AutoRouter")
-    arg("RouterPackage", "com.sautner.ktor")
-}
+//ksp {
+//    arg("RouterClassName", "AutoRouter")
+//    arg("RouterPackage", "com.sautner.ktor")
+//}
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(project(":auto-router"))
-    ksp(project(":auto-router"))
+    ksp(project(":auto-router-ksp"))
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-resources:$ktor_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
