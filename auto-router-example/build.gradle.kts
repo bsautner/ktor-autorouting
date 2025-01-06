@@ -7,7 +7,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
     id("io.ktor.plugin") version "3.0.2"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+    id("com.google.devtools.ksp")
 }
 
 group = "io.github.bsautner"
@@ -35,8 +35,8 @@ repositories {
 
 dependencies {
 
-    implementation("io.github.bsautner:auto-router:0.0.1")
-    ksp("io.github.bsautner:auto-router-ksp:0.0.1")
+    implementation(project(":auto-router"))
+    ksp(project(":auto-router-ksp"))
 
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-server-resources-jvm")

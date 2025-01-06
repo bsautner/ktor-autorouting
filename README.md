@@ -1,11 +1,54 @@
-![Maven Central Version](https://img.shields.io/maven-central/v/io.github.bsautner/auto-router)
-
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.bsautner/auto-router)](https://central.sonatype.com/artifact/io.github.bsautner/auto-router/overview)
 
 # ktor-autorouting
-An advanced framework for [typesafe routing in ktor](https://ktor.io/docs/server-resources.html) with [KSP Code Generation](https://kotlinlang.org/docs/ksp-overview.html).
-[https://central.sonatype.com/artifact/io.github.bsautner/auto-router/overview](https://central.sonatype.com/artifact/io.github.bsautner/auto-router/overview)
 
-## Usage
+Auto Router will scan your code for usages of @Resource from [typesafe routing in ktor](https://ktor.io/docs/server-resources.html) and generate your routing pluging code for you using with [KSP Code Generation](https://kotlinlang.org/docs/ksp-overview.html).
+
+The library provides interfaces and annotations you can use with your Resource to process your incoming and outgoing data with lambdas.
+
+Your Ktor Server routing plugin usage will always be this simple:
+
+```kotlin
+fun Application.module() {
+    install(Resources)
+    autoRoute() //autoroute is an Application extension function re-generated with each build 
+}
+```
+You can then work in a purely type safe and declarative manner.
+
+# Example
+
+You can see fully implemented examples of all types of routing [here](https://github.com/bsautner/ktor-autorouting/tree/main/auto-router-example).
+
+```kotlin
+
+//create a response object for GET. 
+@Serializable
+data class Test(val name : String = "") : AutoJsonResponse()
+
+// GET requests to your server /test path will be routed the render lambda.
+@Resource("/test")
+class BasicJsonGet: AutoGet<AutoJsonResponse> {
+    @Transient
+    override var render: () -> AutoResponse = { Test("Hello World!") }
+}
+```
+
+Autorouter Will automatically create this Routing Code:
+
+```kotlin
+public fun Application.autoRoute() {
+  routing {
+    get<BasicJsonGet> {
+       call.respond(it.render.invoke() as Any, typeInfo = TypeInfo(Any::class))
+    }
+  }
+}
+```
+
+Your routing code will always be clean, organized and type safe with perfect polymorphic serialization done for you.
+
+## Setup
 
 Add these dependencies to your project.  The code generation will run with your build tasks. 
 
@@ -39,51 +82,4 @@ You'll want to add that to your path:
             kotlin.srcDir("build/generated/ksp/main/kotlin")
         }
     }
-```
-This is a crisp clean implementation of Type Safe Routing. Your Ktor Server routing plugin usage will always just need to be this simple:
-
-```kotlin
-import io.github.bsautner.autorouter.annotations.autoRoute
-import io.ktor.server.application.*
-import io.ktor.server.resources.*
-
-
-fun main(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
-}
-
-fun Application.module() {
-    install(Resources)
-    autoRoute()
-}
-```
-
-You can then work in a purely type safe and declarative manner.
-
-Creating a class in your code base for example:
-
-```kotlin
-@Serializable
-data class Test(val name : String = "") : AutoJsonResponse()
-
-@AutoRouting()
-@Resource("/test")
-class BasicJsonGet: AutoGet<AutoJsonResponse> {
-
-    @Transient
-    override var render: () -> AutoResponse = { Test("Hello World") }
-
-}
-```
-
-Will automatically create this Routing Code: 
-
-```kotlin
-public fun Application.autoRoute() {
-  routing {
-    get<BasicJsonGet> {
-       call.respond(it.render.invoke() as Any, typeInfo = TypeInfo(Any::class))
-    }
-  }
-}
 ```

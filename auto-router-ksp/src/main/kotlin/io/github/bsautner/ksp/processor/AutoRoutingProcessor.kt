@@ -12,9 +12,11 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.ksp.writeTo
 import io.github.bsautner.autorouter.AutoGet
+import io.github.bsautner.autorouter.AutoMultipartPost
 import io.github.bsautner.autorouter.AutoPost
 import io.github.bsautner.autorouter.AutoWeb
 import io.github.bsautner.autorouter.annotations.AutoRouting
+import io.ktor.resources.*
 import io.ktor.server.application.*
 import java.util.*
 import kotlin.reflect.KClass
@@ -35,7 +37,7 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         logger = env.logger
-        val annotationFqName = AutoRouting::class.qualifiedName!!
+        val annotationFqName = Resource::class.qualifiedName!!
         val symbols = resolver.getSymbolsWithAnnotation(annotationFqName)
         val sequence = symbols.filter { it is KSClassDeclaration && it.validate() }
         if (sequence.toList().isNotEmpty()) {
@@ -86,6 +88,7 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
             .addImport("kotlinx.html", "html", "body", "div")
             .addImport("io.github.bsautner.autorouter","getPostBodyClass", "getPostResponseBodyClass")
             .addImport("io.ktor.server.request", "receive")
+            .addImport("io.ktor.server.request","receiveMultipart", "receiveParameters")
 
 
 
@@ -166,6 +169,19 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
                     getBlock.endControlFlow()
                 }
 
+                if (ksc.implementsInterface(AutoMultipartPost::class)) {
+                    /**
+                     *       val form = call.receiveParameters()
+                     *
+                     *       call.respond( it.process(form))
+                     */
+                    val responseClass = getAutoRoutingKClassName(ksc)?.second
+                    getBlock.beginControlFlow("post<${ksc.simpleName.asString()}>")
+                    getBlock.addStatement("val form = call.receiveParameters()")
+                        .addStatement(" call.respond(it.process(form) as Any, typeInfo = TypeInfo(Any::class))")
+
+                    getBlock.endControlFlow()
+                }
 
                 if (ksc.implementsInterface(AutoPost::class)) {
                     /**
@@ -240,6 +256,7 @@ fun getAutoRoutingKClassName(classDeclaration: KSClassDeclaration): Pair<String,
 
     return null
 }
+
 // Function to check if the class or any of its superclasses implement the given interface
 fun KSClassDeclaration.implementsInterface(interfaceClass: KClass<*>): Boolean {
     val interfaceFqn = interfaceClass.qualifiedName ?: return false

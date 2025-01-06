@@ -11,6 +11,10 @@ import kotlinx.serialization.Transient
 @Serializable
 data class Test(val name : String = "") : AutoJsonResponse()
 
+
+/**
+ * This will be detected at compile time and calls to /test will be routed to this lamba
+ */
 @AutoRouting()
 @Resource("/test")
 class BasicJsonGet: AutoGet<AutoJsonResponse> {

@@ -1,5 +1,6 @@
 package io.github.bsautner.autorouter
 
+import io.ktor.http.*
 import kotlin.reflect.KClass
 
 
@@ -13,6 +14,10 @@ interface AutoWeb<T> {
 
 interface AutoPost<T, R> {
     var process: (T) -> R
+}
+
+interface AutoMultipartPost {
+    var process: (Parameters) -> Unit
 }
 
 inline fun <reified T, reified R> AutoPost<T, R>.getPostBodyClass() : KClass<*> {
