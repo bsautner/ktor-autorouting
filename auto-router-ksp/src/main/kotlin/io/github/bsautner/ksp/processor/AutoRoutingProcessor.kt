@@ -6,10 +6,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.*
 import com.google.devtools.ksp.validate
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.writeTo
 import io.github.bsautner.autorouter.AutoGet
 import io.github.bsautner.autorouter.AutoMultipartPost
@@ -18,6 +15,7 @@ import io.github.bsautner.autorouter.AutoWeb
 import io.github.bsautner.autorouter.annotations.AutoRouting
 import io.ktor.resources.*
 import io.ktor.server.application.*
+import java.io.File
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -33,6 +31,8 @@ lateinit var logger: KSPLogger
 
 private val processed = mutableSetOf<String>()
 
+private var done = false
+
 class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcessor {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -40,15 +40,24 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
         val annotationFqName = Resource::class.qualifiedName!!
         val symbols = resolver.getSymbolsWithAnnotation(annotationFqName)
         val sequence = symbols.filter { it is KSClassDeclaration && it.validate() }
-        if (sequence.toList().isNotEmpty()) {
-            createRouter(sequence)
-        }
+        val js = env.options["js"] == "true"
+        val generatedDir = env.options["ksp.generated.dir"] //?: error("KSP generated directory not specified!")
+        log("generatedDir: $generatedDir")
 
+        if (! done) {
+            createClient(generatedDir.toString())
+            done = true
+        }
+        if (sequence.toList().isNotEmpty()) {
+
+                createRouter(sequence)
+
+
+        }
         return sequence.toList()
     }
-
     private fun createRouter(sequence: Sequence<KSAnnotated>) {
-        log("starting code generation ${env.options}")
+      //  log("starting code generation 2 ${env.options}")
         val className = AutoRouting::class.simpleName
         val classPackage = AutoRouting::class.qualifiedName?.substringBeforeLast(".")
         if (className.isNullOrBlank() or classPackage.isNullOrBlank()) {
@@ -61,8 +70,7 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
             if (!processed.contains("${classPackage}.${className}")) {
                 val routerClass = ClassName(classPackage!!, className!!)
                 val file = FileSpec.builder(classPackage, className)
-                addImports(file, sequence)  
-                    
+                addImports(file, sequence)
                     file.addFunction(FunSpec
                         .builder("autoRoute")
                         .receiver(Application::class)
@@ -74,8 +82,45 @@ class AutoRoutingProcessor(val env: SymbolProcessorEnvironment) : SymbolProcesso
                 processed.add("${classPackage}.${className}")
             }
         }
+    }
+    /**
+     * @file:JsExport
+     * @file:Suppress("OPT_IN_USAGE")
+     *
+     * package io.github.bsautner
+     *
+     * object Const {
+     *     const val CONNECT = "connect"
+     *     const val DISCONNECT = "disconnect"
+     * }
+     */
+    private fun createClient(generatedDir : String) {
+        if (! File("$generatedDir/Test").exists()) {
+            val className = "Test"
+            val file = FileSpec.builder("io.github.bsautner", className)
+            log("creating client for $className")
+            val outputDir = File(generatedDir)
+            log("Directory:${outputDir.exists()} ${outputDir.absolutePath} ")
+            outputDir.mkdirs()
+            val annotationSpec = AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+                .addMember("%T::class", ClassName("kotlin.js", "ExperimentalJsExport"))
+                .build()
+            file.addAnnotation(annotationSpec)
+            file.addAnnotation(ClassName("kotlin.js", "JsExport"))
+            file.addImport("kotlin.js", "JsExport", "ExperimentalJsExport")
+            //     .addCode(CodeBlock.builder().addStatement("test") .build())
+            //file.addCode (topBlock)
+            val generatedClass = TypeSpec.classBuilder(className)
+                .addProperty(
+                    PropertySpec.builder("bar", String::class)
+                        .initializer("\"ben49\"")
+                        .build()
+                ).build()
+            file.addType(generatedClass)
 
-
+            val writeTo = file.build().writeTo(outputDir)
+            log("done client 1")
+        }
     }
 
     private fun addImports(file: FileSpec.Builder, sequence: Sequence<KSAnnotated>) {

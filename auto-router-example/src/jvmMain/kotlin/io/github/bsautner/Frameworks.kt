@@ -9,24 +9,19 @@ import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.*
-import kotlinx.serialization.Serializable
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
-fun Application.configureTemplating() {
-    routing {
-        get("/html-dsl") {
-            call.respondHtml {
-                body {
-                    h1 { +"HTML" }
-                    ul {
-                        for (n in 1..10) {
-                            li { +"$n" }
-                        }
-                    }
+fun Application.configureFrameworks() {
+    install(Koin) {
+        slf4jLogger()
+        modules(module {
+            single<HelloService> {
+                HelloService {
+                    println(environment.log.info("Hello, World!"))
                 }
             }
-        }
+        })
     }
 }

@@ -12,15 +12,23 @@ tasks.withType<GenerateModuleMetadata> {
 
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
 }
 
 group = "io.github.bsautner"
 version = "1.0-SNAPSHOT"
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17)) // Use JDK 17
+    }
+}
 repositories {
     mavenCentral()
     gradlePluginPortal()
+    maven { url = uri("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-js-wrappers") }
+
 }
 
 

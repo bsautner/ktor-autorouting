@@ -9,7 +9,7 @@ version = "1.0-SNAPSHOT"
 plugins {
     kotlin("jvm")
     kotlin("kapt")
-    id("com.google.devtools.ksp")
+     id("com.google.devtools.ksp") version "2.1.0-1.0.29"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     `maven-publish`
     `java-library`
@@ -31,6 +31,14 @@ val sourcesJar by tasks.registering(Jar::class) {
     archiveClassifier.set("sources")
     // If your source is in `src/main/kotlin`, include that
     from(sourceSets["main"].allSource)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17)) // Use JDK 17
+    }
 }
 
 dependencies {

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <excludedPredefinedLibrary name="ktor-autorouter/build/js/packages/ktor-autorouter-auto-router-kmp-test/node_modules" />
+  </component>
+</project>

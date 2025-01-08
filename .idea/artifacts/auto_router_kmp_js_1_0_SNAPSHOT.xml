@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="auto-router-kmp-js-1.0-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/auto-router-kmp/build/libs</output-path>
+    <root id="archive" name="auto-router-kmp-js-1.0-SNAPSHOT.jar">
+      <element id="module-output" name="ktor-autorouter.auto-router-kmp.jsMain" />
+    </root>
+  </artifact>
+</component>

@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="auto-router-example-js-0.0.1">
+    <output-path>$PROJECT_DIR$/auto-router-example/build/libs</output-path>
+    <root id="archive" name="auto-router-example-js-0.0.1.jar">
+      <element id="module-output" name="ktor-autorouter.auto-router-example.jsMain" />
+    </root>
+  </artifact>
+</component>

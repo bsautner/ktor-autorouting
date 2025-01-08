@@ -12,7 +12,7 @@ plugins {
     `maven-publish`
     `java-library`
     signing
- }
+}
 
 repositories {
     mavenCentral()
@@ -20,20 +20,38 @@ repositories {
 
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
-    // If you're building a Kotlin-only project without Java docs, you can skip actual generation
-    // or replace with Dokka if you want real Kotlin docs.
     from(tasks.named("javadoc"))
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
     archiveClassifier.set("sources")
-    // If your source is in `src/main/kotlin`, include that
     from(sourceSets["main"].allSource)
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
 
+//kotlin {
+//    js {
+//        nodejs()  // Optional, for Node.js support
+//        binaries.executable()
+//    }
+//}
+
+sourceSets {
+    val jsMain by creating {
+        kotlin.srcDir("src/jsMain/kotlin")
+        resources.srcDir("src/jsMain/resources")
+    }
+}
 
 dependencies {
+
     implementation("io.ktor:ktor-server-html-builder:$ktor_version")
     implementation("io.ktor:ktor-server-core:$ktor_version")
     implementation("io.ktor:ktor-server-resources:$ktor_version")
@@ -47,7 +65,6 @@ publishing {
     repositories {
         maven {
             name = "localManual"
-            // Publish to build/repo (or any local directory you want)
             url = uri("$buildDir/repo")
         }
     }
@@ -59,7 +76,6 @@ publishing {
             groupId = "io.github.bsautner"
             version = "0.0.1"
 
-            // Attach sources and javadoc jars
             artifact(sourcesJar)
             artifact(javadocJar)
 
@@ -92,9 +108,8 @@ publishing {
 }
 
 signing {
-    val signingKey = System.getenv("SIGNING_KEY")?.replace("\\n", "\n")
+    val signingKey = System.getenv("SIGNING_KEY")?.replace("\\\\n", "\\n")
     val signingPassword = System.getenv("SIGNING_PASSWORD")
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign(publishing.publications["auto-router"])
 }
-
